@@ -1,5 +1,6 @@
 package moe.shizuku.manager.ui.screen
 
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import android.content.ClipData
 import android.content.ClipDescription
 import android.content.ClipboardManager
@@ -647,7 +648,7 @@ fun WifiPasswordsScreen(bottomPadding: Dp, onBack: () -> Unit) {
                                 )
                             )
                         },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth().televisionTextInput(OutlinedTextFieldDefaults.shape)
                     )
                 }
             },
@@ -678,7 +679,7 @@ fun WifiPasswordsScreen(bottomPadding: Dp, onBack: () -> Unit) {
                     onValueChange = { importPassword = it },
                     singleLine = true,
                     label = { Text(stringResource(R.string.wifi_backup_password)) },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth().televisionTextInput(OutlinedTextFieldDefaults.shape)
                 )
             },
             confirmButton = {

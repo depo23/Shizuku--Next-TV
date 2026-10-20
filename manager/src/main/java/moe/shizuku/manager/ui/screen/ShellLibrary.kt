@@ -1,5 +1,7 @@
 package moe.shizuku.manager.ui.screen
 
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import moe.shizuku.manager.ui.component.televisionTextInput
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -66,7 +68,8 @@ internal fun LibrarySheet(
                 onValueChange = onQueryChange,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                    .padding(horizontal = 16.dp)
+                    .televisionTextInput(OutlinedTextFieldDefaults.shape),
                 placeholder = { Text(stringResource(R.string.shell_library_hint)) },
                 leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
                 singleLine = true
@@ -155,7 +158,7 @@ internal fun VariablesDialog(
                         OutlinedTextField(
                             value = values[name].orEmpty(),
                             onValueChange = { onValueChange(name, it) },
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.weight(1f).televisionTextInput(OutlinedTextFieldDefaults.shape),
                             label = { Text(name) },
                             singleLine = true
                         )
