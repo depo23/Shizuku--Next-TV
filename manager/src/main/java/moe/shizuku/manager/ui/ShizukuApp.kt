@@ -192,6 +192,9 @@ enum class Detail(
  */
 private val MaxContentWidth = 600.dp
 
+/** A television's pages use the width a TV has: Home lays out two panes side by side. */
+private val TelevisionMaxContentWidth = 1100.dp
+
 
 
 private data class Tab(
@@ -424,7 +427,7 @@ private fun CenteredContent(
             modifier = Modifier
                 // widthIn must come first: fillMaxWidth sets min == max, which
                 // would defeat a later widthIn cap.
-                .widthIn(max = MaxContentWidth)
+                .widthIn(max = if (LocalTelevision.current) TelevisionMaxContentWidth else MaxContentWidth)
                 .fillMaxWidth()
                 .fillMaxHeight()
         ) {

@@ -2,6 +2,7 @@
 
 package moe.shizuku.manager.ui.screen
 
+import moe.shizuku.manager.ui.component.televisionTextInput
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -1280,7 +1281,7 @@ private fun NameDialog(
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().televisionTextInput(OutlinedTextFieldDefaults.shape),
                 placeholder = { Text(stringResource(R.string.shell_bookmark_name_hint)) },
                 singleLine = true
             )
@@ -1336,7 +1337,7 @@ private fun PackagePickerDialog(
                 OutlinedTextField(
                     value = query,
                     onValueChange = { query = it },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().televisionTextInput(OutlinedTextFieldDefaults.shape),
                     placeholder = { Text(stringResource(R.string.manage_search_hint)) },
                     singleLine = true
                 )

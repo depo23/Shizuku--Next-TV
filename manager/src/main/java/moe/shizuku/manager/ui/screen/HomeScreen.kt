@@ -32,10 +32,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -116,6 +118,7 @@ import moe.shizuku.manager.starter.StarterActivity
 import moe.shizuku.manager.ui.component.ExpressiveCard
 import moe.shizuku.manager.ui.component.SegmentedColumn
 import moe.shizuku.manager.ui.theme.LocalAmoledTheme
+import moe.shizuku.manager.ui.theme.LocalTelevision
 import moe.shizuku.manager.ui.component.SegmentedListItem
 import moe.shizuku.manager.ui.component.stripHtmlTags
 import moe.shizuku.manager.utils.CustomTabsHelper
@@ -321,11 +324,15 @@ fun HomeScreen(bottomPadding: Dp) {
                 .weight(1f)
         ) {
             val listState = rememberLazyListState()
-            LazyColumn(
-                state = listState,
-                contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = bottomPadding),
-                verticalArrangement = Arrangement.spacedBy(13.dp)
-            ) {
+            val television = LocalTelevision.current
+            val pagePadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = bottomPadding)
+            val paneSpacing = Arrangement.spacedBy(13.dp)
+
+            // What the page is for, then what it knows about the device. On a phone they are one
+            // column in that order; on a TV they are two panes side by side, so the status and
+            // the buttons that act on it fill the first screenful instead of being followed by
+            // a long column nobody can see the end of from a sofa.
+            val controlItems: LazyListScope.() -> Unit = {
             // A warning about where Android says Shizuku's permission lives, and nothing more:
             // every part of the app works with it wrong, but other apps look Shizuku up by that
             // permission, so finding out what they find is worth saying - once, and out of the way.
@@ -638,6 +645,31 @@ fun HomeScreen(bottomPadding: Dp) {
                     }
                 )
             }
+            // The steps a remote can walk, for a TV that is not running Shizuku yet. Each one is a
+            // button the D-pad lands on, in the order they are done in; the same actions the
+            // failure cards offer, but laid out before anything has failed.
+            if (television && !running) {
+                item {
+                    TelevisionSetupGuide(
+                        developerOptionsOn = developerOptionsOn,
+                        onOpenWirelessDebugging = {
+                            runCatching {
+                                SettingsPage.Developer.HighlightWirelessDebugging.launch(context)
+                            }
+                        },
+                        onPair = {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                                runCatching { context.showAccessibilityDialog() }
+                            }
+                        },
+                        onStart = {
+                            startWithLocalNetworkPermission(ShizukuSettings.getStartMethod()) {
+                                ShizukuReceiverStarter.start(context, userInitiated = true)
+                            }
+                        }
+                    )
+                }
+            }
             item {
                 // The ways to start, as cards rather than rows: each one is a decision with
                 // a reason attached, so it gets an icon to be recognised by and a body that
@@ -771,6 +803,8 @@ fun HomeScreen(bottomPadding: Dp) {
                     }
                 }
             }
+            }
+            val deviceItems: LazyListScope.() -> Unit = {
             item {
                 SegmentedColumn(modifier = Modifier.fillMaxWidth()) {
                     // Same rows KernelSU's manager shows, so the device is described the
@@ -863,6 +897,33 @@ fun HomeScreen(bottomPadding: Dp) {
                     }
                 )
             }
+            }
+
+            if (television) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier.weight(1f).fillMaxHeight(),
+                        contentPadding = pagePadding,
+                        verticalArrangement = paneSpacing,
+                        content = controlItems
+                    )
+                    LazyColumn(
+                        modifier = Modifier.weight(1f).fillMaxHeight(),
+                        contentPadding = pagePadding,
+                        verticalArrangement = paneSpacing,
+                        content = deviceItems
+                    )
+                }
+            } else {
+                LazyColumn(
+                    state = listState,
+                    contentPadding = pagePadding,
+                    verticalArrangement = paneSpacing
+                ) {
+                    controlItems()
+                    deviceItems()
+                }
             }
 
             ScrollToTopButton(
@@ -1088,6 +1149,19 @@ private data class StatusFactEntry(
 
 @Composable
 private fun StatusFacts(vararg facts: StatusFactEntry) {
+    // Four facts in a row need a phone-wide pane; a TV's half-page pane holds two across, and
+    // the type is larger there, so they wrap onto a second row instead of clipping.
+    if (LocalTelevision.current) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            facts.toList().chunked(2).forEach { pair -> StatusFactsRow(*pair.toTypedArray()) }
+        }
+        return
+    }
+    StatusFactsRow(*facts)
+}
+
+@Composable
+private fun StatusFactsRow(vararg facts: StatusFactEntry) {
     Row(
         // IntrinsicSize.Min is what gives the rules a height to fill: without it the
         // divider measures against the row's (unbounded) constraint and disappears.
@@ -1142,6 +1216,84 @@ private fun StatusFact(fact: StatusFactEntry, modifier: Modifier = Modifier) {
     }
 }
 
+/**
+ * The three things a TV needs done, in order, to get Shizuku running: Wireless debugging switched
+ * on, the device paired, then Start. The first two are not marked done - the platform does not
+ * say whether the device is paired - but Developer options being off is, because without them
+ * the first step opens nothing.
+ */
+@Composable
+private fun TelevisionSetupGuide(
+    developerOptionsOn: Boolean,
+    onOpenWirelessDebugging: () -> Unit,
+    onPair: () -> Unit,
+    onStart: () -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        shape = MaterialTheme.shapes.large
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                stringResource(R.string.tv_setup_title),
+                style = MaterialTheme.typography.titleMedium
+            )
+            Text(
+                stringResource(
+                    if (developerOptionsOn) R.string.tv_setup_summary
+                    else R.string.start_failed_developer_options_off
+                ),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            TelevisionSetupStep(
+                number = 1,
+                label = stringResource(R.string.action_open_wireless_debugging),
+                enabled = developerOptionsOn,
+                onClick = onOpenWirelessDebugging
+            )
+            TelevisionSetupStep(
+                number = 2,
+                label = stringResource(R.string.action_pair),
+                enabled = developerOptionsOn && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R,
+                onClick = onPair
+            )
+            TelevisionSetupStep(
+                number = 3,
+                label = stringResource(R.string.action_start),
+                enabled = true,
+                onClick = onStart
+            )
+        }
+    }
+}
+
+@Composable
+private fun TelevisionSetupStep(
+    number: Int,
+    label: String,
+    enabled: Boolean,
+    onClick: () -> Unit
+) {
+    OutlinedButton(
+        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+        enabled = enabled,
+        onClick = onClick
+    ) {
+        Text(
+            "$number",
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.width(32.dp)
+        )
+        Text(label, modifier = Modifier.weight(1f))
+    }
+}
+
 /** Restart's blue see the note where it is used. */
 private val RestartBlue = Color(0xFF2563EB)
 
@@ -1158,12 +1310,15 @@ private fun ServerActionButtons(
     onStop: () -> Unit,
     onRestart: () -> Unit
 ) {
+    // Taller on a TV, where the buttons are the point of the page and are aimed at with a
+    // D-pad from across a room.
+    val buttonHeight = if (LocalTelevision.current) 64.dp else 40.dp
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Button(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f).heightIn(min = buttonHeight),
             enabled = !running && !starting,
             onClick = onStart
         ) {
@@ -1184,7 +1339,7 @@ private fun ServerActionButtons(
         // Red: stopping is the destructive one, and the theme's error role stays red
         // whatever the seed colour is.
         Button(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f).heightIn(min = buttonHeight),
             enabled = running,
             onClick = onStop,
             colors = ButtonDefaults.buttonColors(
@@ -1199,7 +1354,7 @@ private fun ServerActionButtons(
         // the wallpaper or the brand colour, so a role here would come out indigo or
         // teal depending on the theme.
         Button(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f).heightIn(min = buttonHeight),
             enabled = running,
             onClick = onRestart,
             colors = ButtonDefaults.buttonColors(

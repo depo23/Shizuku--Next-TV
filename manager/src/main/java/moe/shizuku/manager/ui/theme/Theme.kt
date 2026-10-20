@@ -9,6 +9,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.LocalRippleConfiguration
 import androidx.compose.material3.MotionScheme
+import androidx.compose.material3.Typography
 import androidx.compose.material3.RippleConfiguration
 import androidx.compose.material.ripple.RippleAlpha
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -24,6 +25,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.isSpecified
 import androidx.core.view.WindowInsetsControllerCompat
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
@@ -61,6 +65,38 @@ private val TelevisionRipple = RippleConfiguration(
         hoveredAlpha = 0.08f,
         pressedAlpha = 0.10f
     )
+)
+
+/**
+ * How much larger the type is on a television. A TV is read from a sofa, about three metres
+ * away, and the phone's type is sized for arm's length: at 1080p a TV reports the same 960 x
+ * 540dp as a small tablet, so body text at 14sp comes out unreadably small across a room.
+ */
+private const val TelevisionTypeScale = 1.2f
+
+private fun TextStyle.scaled(factor: Float): TextStyle = copy(
+    fontSize = fontSize.scaled(factor),
+    lineHeight = lineHeight.scaled(factor)
+)
+
+private fun TextUnit.scaled(factor: Float): TextUnit = if (isSpecified) this * factor else this
+
+private fun Typography.forTelevision(): Typography = copy(
+    displayLarge = displayLarge.scaled(TelevisionTypeScale),
+    displayMedium = displayMedium.scaled(TelevisionTypeScale),
+    displaySmall = displaySmall.scaled(TelevisionTypeScale),
+    headlineLarge = headlineLarge.scaled(TelevisionTypeScale),
+    headlineMedium = headlineMedium.scaled(TelevisionTypeScale),
+    headlineSmall = headlineSmall.scaled(TelevisionTypeScale),
+    titleLarge = titleLarge.scaled(TelevisionTypeScale),
+    titleMedium = titleMedium.scaled(TelevisionTypeScale),
+    titleSmall = titleSmall.scaled(TelevisionTypeScale),
+    bodyLarge = bodyLarge.scaled(TelevisionTypeScale),
+    bodyMedium = bodyMedium.scaled(TelevisionTypeScale),
+    bodySmall = bodySmall.scaled(TelevisionTypeScale),
+    labelLarge = labelLarge.scaled(TelevisionTypeScale),
+    labelMedium = labelMedium.scaled(TelevisionTypeScale),
+    labelSmall = labelSmall.scaled(TelevisionTypeScale)
 )
 
 /** Bumped when a theme preference changes so the theme re-reads the prefs. */
@@ -155,6 +191,7 @@ fun ShizukuTheme(content: @Composable () -> Unit) {
         MaterialTheme(
             colorScheme = colorScheme,
             motionScheme = MotionScheme.expressive(),
+            typography = if (television) Typography().forTelevision() else Typography(),
             content = content
         )
     }

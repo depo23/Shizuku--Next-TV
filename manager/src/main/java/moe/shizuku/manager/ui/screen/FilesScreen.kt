@@ -1,5 +1,7 @@
 package moe.shizuku.manager.ui.screen
 
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import moe.shizuku.manager.ui.component.televisionTextInput
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -805,6 +807,7 @@ private fun NameDialog(ask: Ask, onDismiss: () -> Unit, onConfirm: (String) -> U
             OutlinedTextField(
                 value = value,
                 onValueChange = { value = it },
+                modifier = Modifier.televisionTextInput(OutlinedTextFieldDefaults.shape),
                 label = { Text(stringResource(R.string.files_field_name)) },
                 singleLine = true
             )

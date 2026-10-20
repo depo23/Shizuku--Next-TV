@@ -1,5 +1,7 @@
 package moe.shizuku.manager.ui.screen
 
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import moe.shizuku.manager.ui.component.televisionTextInput
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -1155,6 +1157,7 @@ fun SettingsScreen(bottomPadding: Dp, onOpenDetail: (Detail) -> Unit) {
                 OutlinedTextField(
                     value = draft,
                     onValueChange = { s -> draft = s.filter { it.isDigit() }.take(5) },
+                    modifier = Modifier.televisionTextInput(OutlinedTextFieldDefaults.shape),
                     singleLine = true,
                     keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
                         keyboardType = KeyboardType.Number
