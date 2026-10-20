@@ -1,0 +1,38 @@
+name: TV Debug APK
+
+# A debug build for side-loading onto a Fire TV / Android TV device. No signing secrets, no version
+# bump, no release: the debug keystore signs it, and the APK is an artifact of the run.
+on:
+  workflow_dispatch:
+  push:
+    branches: [ccr-79421503-z05tf3]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          submodules: 'recursive'
+          fetch-depth: 0
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
+
+      - name: Build debug APK
+        run: |
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null || true
+          ./gradlew :manager:assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v6
+        with:
+          name: shizuku-tv-debug
+          path: manager/build/outputs/apk/debug/*.apk
