@@ -1,37 +1,49 @@
 <div align="center">
 
-<img src="docs/logo.png" width="132" alt="Shizuku Next">
+<img src="docs/logo.png" width="132" alt="Shizuku Next TV">
 
-# Shizuku-Next
+# Shizuku Next TV
 
-An enhanced fork of Shizuku that lets apps use system APIs through ADB or root.
+An enhanced fork of Shizuku for Android TV and Fire TV that lets apps use system APIs through ADB or root.
+
+**[⬇ Download the latest release](https://github.com/depo23/Shizuku--Next-TV/releases/latest)** (`shizuku-next-tv.apk`)
 
 <img width="200" alt="Home screen" src="docs/screenshots/home.png">
 <img width="200" alt="Apps screen" src="docs/screenshots/apps.png">
 <img width="200" alt="Settings screen" src="docs/screenshots/settings.png">
 
-[![Stars](https://img.shields.io/github/stars/rushiranpise/Shizuku-Next?style=for-the-badge)](https://github.com/rushiranpise/Shizuku-Next/stargazers)
-[![Downloads](https://img.shields.io/github/downloads/rushiranpise/Shizuku-Next/total?style=for-the-badge)](https://github.com/rushiranpise/Shizuku-Next/releases)
-[![Latest Stable](https://img.shields.io/github/v/release/rushiranpise/Shizuku-Next?style=for-the-badge&label=Latest%20Stable)](https://github.com/rushiranpise/Shizuku-Next/releases/latest)
-[![Latest Beta](https://img.shields.io/github/v/release/rushiranpise/Shizuku-Next?include_prereleases&style=for-the-badge&label=Latest%20Beta)](https://github.com/rushiranpise/Shizuku-Next/releases)
-[![Issues](https://img.shields.io/github/issues/rushiranpise/Shizuku-Next?style=for-the-badge)](https://github.com/rushiranpise/Shizuku-Next/issues)
+[![Stars](https://img.shields.io/github/stars/depo23/Shizuku--Next-TV?style=for-the-badge)](https://github.com/depo23/Shizuku--Next-TV/stargazers)
+[![Downloads](https://img.shields.io/github/downloads/depo23/Shizuku--Next-TV/total?style=for-the-badge)](https://github.com/depo23/Shizuku--Next-TV/releases)
+[![Latest Release](https://img.shields.io/github/v/release/depo23/Shizuku--Next-TV?style=for-the-badge&label=Latest%20Release)](https://github.com/depo23/Shizuku--Next-TV/releases/latest)
+[![Issues](https://img.shields.io/github/issues/depo23/Shizuku--Next-TV?style=for-the-badge)](https://github.com/depo23/Shizuku--Next-TV/issues)
 [![Crowdin](https://img.shields.io/badge/Translate-Crowdin-2e3340?style=for-the-badge&logo=crowdin)](https://crowdin.com/project/Shizuku-Next)
 
 </div>
 
+## What's new in Shizuku Next TV
+
+Changes made in this fork on top of [Shizuku-Next](https://github.com/rushiranpise/Shizuku-Next):
+
+- **10-foot TV interface:** typography scaled 1.2x on television, a wider content area, and a two-pane Home with the status and actions beside the device pane, taller action buttons and two-row status facts.
+- **Remote-friendly setup:** a D-pad-driven setup guide on Home while Shizuku is stopped, and dialog and sheet text fields that wait for OK before opening the keyboard.
+- **Works on Fire TV and most Android TV:** TVs that only offer "ADB debugging" have no wireless pairing, so the default start on a television is now the ADB method over the network port. It finds the open port even when the platform does not name it.
+- **Signed releases with a private key:** every build is signed with the project's own key, never the debug key, and published as a single `shizuku-next-tv.apk`.
+- **In-app updates from this repository:** every push to `main` builds and publishes a release tagged `<version>.r<commit count>`, and the app updates from those releases.
+- **Secret scanning:** a gitleaks workflow scans every push and pull request.
+
 ## About
 
-Shizuku-Next continues development of [thedjchi's Shizuku fork](https://github.com/thedjchi/Shizuku), based on the original [RikkaApps/Shizuku](https://github.com/RikkaApps/Shizuku).
+Shizuku Next TV is a fork of [Shizuku-Next](https://github.com/rushiranpise/Shizuku-Next), which continues [thedjchi's Shizuku fork](https://github.com/thedjchi/Shizuku), based on the original [RikkaApps/Shizuku](https://github.com/RikkaApps/Shizuku).
 
 It keeps Shizuku's package name and API, so compatible apps continue to work.
 
-> **Important:** This fork uses a different signing key. Uninstall the official Shizuku or thedjchi's fork before installing Shizuku-Next. A server started by the previous app may remain active until stopped or the device is rebooted.
+> **Important:** This fork uses a different signing key. Uninstall the official Shizuku, thedjchi's fork or Shizuku-Next before installing Shizuku Next TV. A server started by the previous app may remain active until stopped or the device is rebooted.
 
 If you want the original app, visit [RikkaApps/Shizuku](https://github.com/RikkaApps/Shizuku).
 
 ## Download
 
-Get the latest build from [Releases](https://github.com/rushiranpise/Shizuku-Next/releases).
+Get `shizuku-next-tv.apk` from the [latest release](https://github.com/depo23/Shizuku--Next-TV/releases/latest). All builds are on the [Releases](https://github.com/depo23/Shizuku--Next-TV/releases) page.
 
 ## Features
 
@@ -104,8 +116,8 @@ Shizuku may run with different privileges depending on the start method. Check t
 ### Build
 
 ```bash
-git clone --recurse-submodules https://github.com/rushiranpise/Shizuku-Next.git
-cd Shizuku-Next
+git clone --recurse-submodules https://github.com/depo23/Shizuku--Next-TV.git
+cd Shizuku--Next-TV
 ./gradlew :manager:assembleDebug
 ```
 
@@ -143,10 +155,10 @@ Licensed under [Apache License 2.0](LICENSE).
 
 ## Star History
 
-<a href="https://www.star-history.com/?repos=rushiranpise%2Fshizuku-next&type=date&legend=top-left">
+<a href="https://www.star-history.com/?repos=depo23%2Fshizuku--next-tv&type=date&legend=top-left">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=rushiranpise/shizuku-next&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=rushiranpise/shizuku-next&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=rushiranpise/shizuku-next&type=date&legend=top-left" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=depo23/shizuku--next-tv&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=depo23/shizuku--next-tv&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=depo23/shizuku--next-tv&type=date&legend=top-left" />
  </picture>
 </a>
