@@ -63,17 +63,31 @@ jobs:
       - name: Build APK
         run: |
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null || true
-          ./gradlew :manager:assembleDebug
-          APK=$(ls manager/build/outputs/apk/debug/*.apk | head -n 1)
-          echo "APK=$APK" >> $GITHUB_ENV
-          # shizuku-v14.0.27.r123-next-debug.apk -> 14.0.27.r123
-          TAG=$(basename "$APK" | sed -E 's/^shizuku-v([0-9]+\.[0-9]+\.[0-9]+\.r[0-9]+).*/\1/')
+          ./gradlew :manager:assembleRelease
+          BUILT=$(ls manager/build/outputs/apk/release/*.apk | head -n 1)
+          # shizuku-v14.0.27.r123-next-release.apk -> 14.0.27.r123
+          TAG=$(basename "$BUILT" | sed -E 's/^shizuku-v([0-9]+\.[0-9]+\.[0-9]+\.r[0-9]+).*/\1/')
           echo "TAG=$TAG" >> $GITHUB_ENV
+          # The published file keeps one fixed name; the version lives in the release tag.
+          cp "$BUILT" shizuku-next-tv.apk
+          echo "APK=shizuku-next-tv.apk" >> $GITHUB_ENV
+
+      # The APK must carry our key, never the debug one: an APK signed with the debug key cannot
+      # be updated in place by a build signed with ours.
+      - name: Verify signature
+        run: |
+          APKSIGNER=$(ls $ANDROID_HOME/build-tools/*/apksigner | sort -V | tail -n 1)
+          CERTS=$("$APKSIGNER" verify --print-certs "$APK")
+          echo "$CERTS"
+          if echo "$CERTS" | grep -qi "Android Debug"; then
+            echo "::error::APK is signed with the Android debug key."
+            exit 1
+          fi
 
       - name: Upload APK
         uses: actions/upload-artifact@v6
         with:
-          name: shizuku-tv-debug
+          name: shizuku-tv-release
           path: ${{ env.APK }}
 
       - name: Publish release

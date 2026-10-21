@@ -307,13 +307,8 @@ object UpdateHelper {
                     val version =
                         Version.parse(release.tag_name)
                             ?: return@mapNotNull null
-                    // Each release carries the debug APK as well, and the API lists it
-                    // first, so prefer the one that is not debug: it is the only one
-                    // signed with the release key and able to install over this build.
                     val asset =
-                        release.assets.firstOrNull {
-                            it.name.endsWith(".apk") && !it.name.endsWith("-debug.apk")
-                        } ?: release.assets.firstOrNull { it.name.endsWith(".apk") }
+                        release.assets.firstOrNull { it.name.endsWith(".apk") }
                             ?: return@mapNotNull null
 
                     Release(
