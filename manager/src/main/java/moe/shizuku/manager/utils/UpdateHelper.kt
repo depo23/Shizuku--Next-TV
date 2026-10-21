@@ -264,7 +264,7 @@ object UpdateHelper {
         }
 
     private fun requestLatestRelease(): Release {
-        val url = "https://api.github.com/repos/rushiranpise/Shizuku-Next/releases"
+        val url = "https://api.github.com/repos/depo23/Shizuku--Next-TV/releases"
         val request =
             Request.Builder()
                 .url(url)

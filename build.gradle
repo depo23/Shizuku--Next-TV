@@ -31,5 +31,7 @@ def baseVersionName = "14.0.27"
 def isBeta = project.hasProperty("beta")
 ext {
     versionCode = gitCommitCount
-    versionName = "${baseVersionName}${if (isBeta) "-beta" else ""}-next"
+    // The commit count is part of the name so the in-app updater can tell two builds of the same
+    // base version apart: it compares "14.0.27.r123" against a release tagged the same way.
+    versionName = "${baseVersionName}.r${gitCommitCount}${if (isBeta) "-beta" else ""}-next"
 }
