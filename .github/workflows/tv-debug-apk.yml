@@ -5,7 +5,7 @@ name: TV Debug APK
 on:
   workflow_dispatch:
   push:
-    branches: [ccr-79421503-z05tf3]
+    branches: [main]
 
 jobs:
   build:

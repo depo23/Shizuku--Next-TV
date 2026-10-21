@@ -203,6 +203,23 @@ class AdbStartWorker(context: Context, params: WorkerParameters) : CoroutineWork
                 Diag.info(AppConstants.TAG, "closing the port: ${AdbStarter.stopTcp(tcpPort)}")
             }
 
+            // A television's "ADB debugging" opens the classic port, but a third-party app is often
+            // not allowed to read the property that names it, so tcpPort comes back unset for a port
+            // that is open. Ask the port itself before concluding there is none.
+            if (usbMethod && tcpPort <= 0 && EnvironmentUtils.isTelevision()) {
+                val open = AdbStarter.firstListening(
+                    StartTransport.portCandidates(
+                        configured = -1,
+                        lastStart = ShizukuSettings.getLastAdbPort(),
+                        appTcpPort = ShizukuSettings.getTcpPort()
+                    )
+                )
+                if (open != null) {
+                    Diag.info(AppConstants.TAG, "TV: ADB port $open is open though the platform does not name it")
+                    tcpPort = open
+                }
+            }
+
             if (usbMethod && tcpPort <= 0) {
                 // A reboot clears the classic ADB port (it isn't persistent) and the
                 // port can only be created by a `tcpip` request over a live connection.

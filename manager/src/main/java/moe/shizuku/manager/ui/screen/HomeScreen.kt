@@ -652,6 +652,13 @@ fun HomeScreen(bottomPadding: Dp) {
                 item {
                     TelevisionSetupGuide(
                         developerOptionsOn = developerOptionsOn,
+                        onStartAdb = {
+                            ShizukuReceiverStarter.start(
+                                context,
+                                userInitiated = true,
+                                startMethod = ShizukuSettings.StartMethod.USB
+                            )
+                        },
                         onOpenWirelessDebugging = {
                             runCatching {
                                 SettingsPage.Developer.HighlightWirelessDebugging.launch(context)
@@ -662,11 +669,6 @@ fun HomeScreen(bottomPadding: Dp) {
                                 runCatching { context.showAccessibilityDialog() }
                             }
                         },
-                        onStart = {
-                            startWithLocalNetworkPermission(ShizukuSettings.getStartMethod()) {
-                                ShizukuReceiverStarter.start(context, userInitiated = true)
-                            }
-                        }
                     )
                 }
             }
@@ -1225,9 +1227,9 @@ private fun StatusFact(fact: StatusFactEntry, modifier: Modifier = Modifier) {
 @Composable
 private fun TelevisionSetupGuide(
     developerOptionsOn: Boolean,
+    onStartAdb: () -> Unit,
     onOpenWirelessDebugging: () -> Unit,
-    onPair: () -> Unit,
-    onStart: () -> Unit
+    onPair: () -> Unit
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -1251,23 +1253,27 @@ private fun TelevisionSetupGuide(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            // The way that works on a Fire TV and on most Android TV builds: only "ADB debugging" is
+            // on offer there, and the start connects to its network port. The TV asks once to allow
+            // the connection; Always allow keeps it from asking again.
             TelevisionSetupStep(
                 number = 1,
+                label = stringResource(R.string.tv_setup_adb),
+                enabled = true,
+                onClick = onStartAdb
+            )
+            // For a TV that does have wireless debugging.
+            TelevisionSetupStep(
+                number = 2,
                 label = stringResource(R.string.action_open_wireless_debugging),
                 enabled = developerOptionsOn,
                 onClick = onOpenWirelessDebugging
             )
             TelevisionSetupStep(
-                number = 2,
+                number = 3,
                 label = stringResource(R.string.action_pair),
                 enabled = developerOptionsOn && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R,
                 onClick = onPair
-            )
-            TelevisionSetupStep(
-                number = 3,
-                label = stringResource(R.string.action_start),
-                enabled = true,
-                onClick = onStart
             )
         }
     }

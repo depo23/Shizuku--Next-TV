@@ -136,9 +136,11 @@ public class ShizukuSettings {
 
     @StartMethod
     public static int getStartMethod() {
+        // A television has no wireless pairing to offer: Fire TV and most Android TV builds
+        // carry only the "ADB debugging" toggle, whose network port the USB method connects to.
         int fallback = getLastLaunchMode() == LaunchMethod.ROOT
                 ? StartMethod.ROOT
-                : StartMethod.WIRELESS;
+                : EnvironmentUtils.isTelevision() ? StartMethod.USB : StartMethod.WIRELESS;
         return getPreferences().getInt(Keys.KEY_START_METHOD, fallback);
     }
 
