@@ -1,0 +1,102 @@
+name: TV Build and Release
+
+# Builds the app on every push to main and publishes it as a GitHub release, which is what the
+# in-app updater reads: each release is tagged <version>.r<commit count>, the same form the app's
+# own version name carries, so a newer tag is a newer build.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+concurrency:
+  group: tv-release
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      KEYSTORE: ${{ secrets.KEYSTORE }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          submodules: 'recursive'
+          # The commit count is the build's version, so the whole history is needed.
+          fetch-depth: 0
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      # An update only installs over the build it replaces if both carry the same signature, so
+      # every build is signed with the one key held in the repository's secrets. Without them the
+      # build stops here rather than ship an APK that cannot be updated in place.
+      - name: Validate signing config
+        run: |
+          if [ -z "$KEYSTORE" ]; then
+            echo "::error::Signing secrets missing: add KEYSTORE (base64 of the .jks), KEYSTORE_PASSWORD, KEYSTORE_ALIAS and KEYSTORE_ALIAS_PASSWORD under Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+
+      - name: Create signing.properties
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEYSTORE_ALIAS: ${{ secrets.KEYSTORE_ALIAS }}
+          KEYSTORE_ALIAS_PASSWORD: ${{ secrets.KEYSTORE_ALIAS_PASSWORD }}
+        run: |
+          echo "$KEYSTORE" | base64 --decode > "$RUNNER_TEMP/key.jks"
+          {
+            echo "KEYSTORE_FILE=$RUNNER_TEMP/key.jks"
+            echo "KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD"
+            echo "KEYSTORE_ALIAS=$KEYSTORE_ALIAS"
+            echo "KEYSTORE_ALIAS_PASSWORD=$KEYSTORE_ALIAS_PASSWORD"
+          } > signing.properties
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
+
+      - name: Build APK
+        run: |
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null || true
+          ./gradlew :manager:assembleRelease
+          BUILT=$(ls manager/build/outputs/apk/release/*.apk | head -n 1)
+          # shizuku-v14.0.27.r123-next-release.apk -> 14.0.27.r123
+          TAG=$(basename "$BUILT" | sed -E 's/^shizuku-v([0-9]+\.[0-9]+\.[0-9]+\.r[0-9]+).*/\1/')
+          echo "TAG=$TAG" >> $GITHUB_ENV
+          # The published file keeps one fixed name; the version lives in the release tag.
+          cp "$BUILT" shizuku-next-tv.apk
+          echo "APK=shizuku-next-tv.apk" >> $GITHUB_ENV
+
+      # The APK must carry our key, never the debug one: an APK signed with the debug key cannot
+      # be updated in place by a build signed with ours.
+      - name: Verify signature
+        run: |
+          APKSIGNER=$(ls $ANDROID_HOME/build-tools/*/apksigner | sort -V | tail -n 1)
+          CERTS=$("$APKSIGNER" verify --print-certs "$APK")
+          echo "$CERTS"
+          if echo "$CERTS" | grep -qi "Android Debug"; then
+            echo "::error::APK is signed with the Android debug key."
+            exit 1
+          fi
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v6
+        with:
+          name: shizuku-tv-release
+          path: ${{ env.APK }}
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          NOTES=$(git log -n 10 --no-merges --pretty='- %s')
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            gh release upload "$TAG" "$APK" --clobber
+          else
+            gh release create "$TAG" "$APK" --target "$GITHUB_SHA" --title "$TAG" --notes "$NOTES" --latest
+          fi
